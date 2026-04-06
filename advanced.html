@@ -1,0 +1,1019 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Linked List Visualizer | Interactive Data Structure Explorer</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;800&display=swap');
+
+    :root {
+      --primary: #00f0ff;
+      --secondary: #ff006e;
+      --accent: #8338ec;
+      --success: #06ffa5;
+      --warning: #ffbe0b;
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface-light: #1e1e2e;
+      --text: #e0e0ff;
+      --text-muted: #6b6b8f;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .noise {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0.03;
+      z-index: 1000;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    .grid-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    header {
+      text-align: center;
+      padding: 3rem 0;
+      position: relative;
+    }
+
+    .glitch {
+      font-size: 4rem;
+      font-weight: 800;
+      letter-spacing: -2px;
+      position: relative;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: glitch 3s infinite;
+    }
+
+    @keyframes glitch {
+
+      0%,
+      90%,
+      100% {
+        transform: translate(0);
+      }
+
+      92% {
+        transform: translate(-2px, 2px);
+      }
+
+      94% {
+        transform: translate(2px, -2px);
+      }
+
+      96% {
+        transform: translate(-2px, -2px);
+      }
+
+      98% {
+        transform: translate(2px, 2px);
+      }
+    }
+
+    .subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      letter-spacing: 2px;
+    }
+
+    .main-interface {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .control-panel {
+      background: var(--surface);
+      border: 1px solid rgba(0, 240, 255, 0.1);
+      border-radius: 16px;
+      padding: 1.5rem;
+      height: fit-content;
+      position: sticky;
+      top: 2rem;
+      box-shadow: 0 0 40px rgba(0, 240, 255, 0.05);
+    }
+
+    .panel-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--primary);
+      margin-bottom: 1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .panel-title::before {
+      content: '▸';
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
+    }
+
+    .control-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .control-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .input-field {
+      width: 100%;
+      background: var(--surface-light);
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    .input-field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 0.875rem;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: var(--bg);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 240, 255, 0.3);
+    }
+
+    .btn-secondary {
+      background: var(--surface-light);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--primary);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, var(--secondary), #ff4d6d);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      box-shadow: 0 10px 30px rgba(255, 0, 110, 0.3);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, var(--success), #00d9a6);
+      color: var(--bg);
+    }
+
+    .btn-success:hover {
+      box-shadow: 0 10px 30px rgba(6, 255, 165, 0.3);
+    }
+
+    .visualization-area {
+      background: var(--surface);
+      border: 1px solid rgba(0, 240, 255, 0.1);
+      border-radius: 16px;
+      padding: 2rem;
+      min-height: 600px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stats-bar {
+      display: flex;
+      gap: 2rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .list-container {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      min-height: 200px;
+      padding: 2rem;
+      position: relative;
+    }
+
+    .node {
+      position: relative;
+      background: var(--surface-light);
+      border: 2px solid var(--primary);
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      min-width: 120px;
+      text-align: center;
+      transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      cursor: pointer;
+      animation: nodeAppear 0.5s ease;
+    }
+
+    @keyframes nodeAppear {
+      from {
+        opacity: 0;
+        transform: scale(0) rotate(-180deg);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+      }
+    }
+
+    .node:hover {
+      transform: translateY(-5px) scale(1.05);
+      box-shadow: 0 20px 40px rgba(0, 240, 255, 0.2);
+      border-color: var(--secondary);
+    }
+
+    .node-index {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg);
+      color: var(--primary);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-family: 'JetBrains Mono', monospace;
+      border: 1px solid var(--primary);
+    }
+
+    .node-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .node-pointer {
+      position: absolute;
+      bottom: -10px;
+      right: -10px;
+      width: 24px;
+      height: 24px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: white;
+      border: 2px solid var(--bg);
+    }
+
+    .arrow {
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      position: relative;
+      animation: flow 2s infinite;
+    }
+
+    @keyframes flow {
+
+      0%,
+      100% {
+        opacity: 0.3;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
+    .arrow::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: -4px;
+      width: 0;
+      height: 0;
+      border-left: 10px solid var(--accent);
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+    }
+
+    .null-terminator {
+      padding: 1rem 2rem;
+      border: 2px dashed var(--text-muted);
+      border-radius: 12px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      opacity: 0.5;
+    }
+
+    .console {
+      margin-top: 2rem;
+      background: #050508;
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      border-radius: 12px;
+      padding: 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .console-line {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .console-time {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    .console-success {
+      color: var(--success);
+    }
+
+    .console-error {
+      color: var(--secondary);
+    }
+
+    .console-info {
+      color: var(--primary);
+    }
+
+    .console-warning {
+      color: var(--warning);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.3;
+    }
+
+    .highlight {
+      animation: highlight 1s ease;
+    }
+
+    @keyframes highlight {
+
+      0%,
+      100% {
+        border-color: var(--primary);
+      }
+
+      50% {
+        border-color: var(--success);
+        box-shadow: 0 0 30px var(--success);
+      }
+    }
+
+    .removing {
+      animation: removeNode 0.5s ease forwards;
+    }
+
+    @keyframes removeNode {
+      to {
+        opacity: 0;
+        transform: scale(0) rotate(180deg);
+      }
+    }
+
+    .code-preview {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(0, 0, 0, 0.8);
+      border: 1px solid var(--primary);
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--primary);
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      max-width: 300px;
+    }
+
+    .node:hover .code-preview {
+      opacity: 1;
+    }
+
+    @media (max-width: 968px) {
+      .main-interface {
+        grid-template-columns: 1fr;
+      }
+
+      .control-panel {
+        position: static;
+      }
+
+      .glitch {
+        font-size: 2.5rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="noise"></div>
+  <div class="grid-bg"></div>
+
+  <div class="container">
+    <header>
+      <h1 class="glitch">Linked List</h1>
+      <p class="subtitle">Interactive Data Structure Visualization Engine v2.0</p>
+    </header>
+
+    <div class="main-interface">
+      <aside class="control-panel">
+        <div class="panel-title">Operations</div>
+
+        <div class="control-group">
+          <label class="control-label">Add Node</label>
+          <input type="text" id="addValue" class="input-field" placeholder="Enter value..." maxlength="10">
+          <button class="btn btn-primary" onclick="listApp.add()">Append to Tail</button>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Insert At Index</label>
+          <input type="number" id="insertIndex" class="input-field" placeholder="Index" min="0">
+          <input type="text" id="insertValue" class="input-field" placeholder="Value" maxlength="10" style="margin-top: 0.5rem;">
+          <button class="btn btn-success" onclick="listApp.insertAt()">Insert at Position</button>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Remove Operations</label>
+          <input type="text" id="removeValue" class="input-field" placeholder="Value to remove">
+          <button class="btn btn-secondary" onclick="listApp.remove()" style="margin-bottom: 0.5rem;">Remove by Value</button>
+          <input type="number" id="removeIndex" class="input-field" placeholder="Index to remove" min="0" style="margin-top: 0.5rem;">
+          <button class="btn btn-danger" onclick="listApp.removeAt()">Remove at Index</button>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Query Operations</label>
+          <input type="text" id="searchValue" class="input-field" placeholder="Search value">
+          <button class="btn btn-secondary" onclick="listApp.contains()">Contains?</button>
+          <input type="number" id="getIndex" class="input-field" placeholder="Get at index" min="0" style="margin-top: 0.5rem;">
+          <button class="btn btn-secondary" onclick="listApp.getAt()">Get Element</button>
+        </div>
+
+        <div class="control-group">
+          <button class="btn btn-danger" onclick="listApp.clear()">Clear List</button>
+        </div>
+      </aside>
+
+      <main class="visualization-area">
+        <div class="stats-bar">
+          <div class="stat-item">
+            <span class="stat-label">Length</span>
+            <span class="stat-value" id="listLength">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Head Value</span>
+            <span class="stat-value" id="headValue">null</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Memory Nodes</span>
+            <span class="stat-value" id="nodeCount">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Operations</span>
+            <span class="stat-value" id="opCount">0</span>
+          </div>
+        </div>
+
+        <div class="list-container" id="listContainer">
+          <div class="empty-state">
+            <div class="empty-state-icon">∅</div>
+            <p>List is empty. Add nodes to begin visualization.</p>
+          </div>
+        </div>
+
+        <div class="console" id="console">
+          <div class="console-line">
+            <span class="console-time">[SYSTEM]</span>
+            <span class="console-info">Linked List Visualizer initialized. Ready for operations.</span>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    class Node {
+      constructor(element) {
+        this.element = element;
+        this.next = null;
+        this.id = Math.random().toString(36).substr(2, 9);
+      }
+    }
+    class LinkedList {
+      constructor() {
+        this.head = null;
+        this.length = 0;
+      }
+      isEmpty() {
+        return this.length === 0;
+      }
+      add(element) {
+        const node = new Node(element);
+        if (this.isEmpty()) {
+          this.head = node;
+        } else {
+          let current = this.head;
+          while (current.next !== null) {
+            current = current.next;
+          }
+          current.next = node;
+        }
+        this.length++;
+        return {
+          success: true,
+          index: this.length - 1
+        };
+      }
+      remove(element) {
+        let previous = null;
+        let current = this.head;
+        let index = 0;
+        while (current !== null && current.element !== element) {
+          previous = current;
+          current = current.next;
+          index++;
+        }
+        if (current === null) {
+          return {
+            success: false,
+            message: 'Element not found'
+          };
+        }
+        if (previous !== null) {
+          previous.next = current.next;
+        } else {
+          this.head = current.next;
+        }
+        this.length--;
+        return {
+          success: true,
+          index: index
+        };
+      }
+      contains(element) {
+        let current = this.head;
+        let index = 0;
+        while (current !== null) {
+          if (current.element === element) {
+            return {
+              found: true,
+              index: index
+            };
+          }
+          current = current.next;
+          index++;
+        }
+        return {
+          found: false,
+          index: -1
+        };
+      }
+      getAt(index) {
+        if (index < 0 || index >= this.length || this.head === null) {
+          return {
+            success: false,
+            value: undefined
+          };
+        }
+        let current = this.head;
+        let currentIndex = 0;
+        while (current !== null && currentIndex < index) {
+          current = current.next;
+          currentIndex++;
+        }
+        return {
+          success: true,
+          value: current ? current.element : undefined
+        };
+      }
+      insertAt(index, element) {
+        if (index < 0 || index > this.length) {
+          return {
+            success: false,
+            message: 'Index out of bounds'
+          };
+        }
+        const node = new Node(element);
+        if (index === 0) {
+          node.next = this.head;
+          this.head = node;
+        } else {
+          let current = this.head;
+          let currentIndex = 0;
+          while (current !== null && currentIndex < index - 1) {
+            current = current.next;
+            currentIndex++;
+          }
+          if (current !== null) {
+            node.next = current.next;
+            current.next = node;
+          }
+        }
+        this.length++;
+        return {
+          success: true
+        };
+      }
+      removeAt(index) {
+        if (index < 0 || index >= this.length || this.head === null) {
+          return {
+            success: false,
+            message: 'Index out of bounds'
+          };
+        }
+        if (index === 0) {
+          this.head = this.head.next;
+        } else {
+          let current = this.head;
+          let currentIndex = 0;
+          while (current !== null && currentIndex < index - 1) {
+            current = current.next;
+            currentIndex++;
+          }
+          if (current !== null && current.next !== null) {
+            current.next = current.next.next;
+          }
+        }
+        this.length--;
+        return {
+          success: true
+        };
+      }
+      clear() {
+        this.head = null;
+        this.length = 0;
+      }
+      toArray() {
+        const arr = [];
+        let current = this.head;
+        let index = 0;
+        while (current !== null) {
+          arr.push({
+            element: current.element,
+            index: index,
+            id: current.id
+          });
+          current = current.next;
+          index++;
+        }
+        return arr;
+      }
+    }
+    class ListApp {
+      constructor() {
+        this.list = new LinkedList();
+        this.operations = 0;
+        this.init();
+      }
+      init() {
+        this.render();
+        this.log('System ready. Waiting for input...', 'info');
+      }
+      add() {
+        const input = document.getElementById('addValue');
+        const value = input.value.trim();
+        if (!value) {
+          this.log('Error: Empty value provided', 'error');
+          return;
+        }
+        const result = this.list.add(value);
+        this.operations++;
+        input.value = '';
+        this.render();
+        this.log(`Added "${value}" at index ${result.index}`, 'success');
+        this.highlightNode(result.index);
+      }
+      remove() {
+        const input = document.getElementById('removeValue');
+        const value = input.value.trim();
+        if (!value) {
+          this.log('Error: Empty value provided', 'error');
+          return;
+        }
+        const result = this.list.remove(value);
+        if (result.success) {
+          this.operations++;
+          this.render();
+          this.log(`Removed "${value}" from index ${result.index}`, 'success');
+        } else {
+          this.log(`Remove failed: ${result.message}`, 'error');
+        }
+        input.value = '';
+      }
+      contains() {
+        const input = document.getElementById('searchValue');
+        const value = input.value.trim();
+        if (!value) {
+          this.log('Error: Empty search value', 'error');
+          return;
+        }
+        const result = this.list.contains(value);
+        if (result.found) {
+          this.log(`Found "${value}" at index ${result.index}`, 'success');
+          this.highlightNode(result.index);
+        } else {
+          this.log(`"${value}" not found in list`, 'warning');
+        }
+      }
+      getAt() {
+        const input = document.getElementById('getIndex');
+        const index = parseInt(input.value);
+        if (isNaN(index)) {
+          this.log('Error: Invalid index', 'error');
+          return;
+        }
+        const result = this.list.getAt(index);
+        if (result.success) {
+          this.log(`Element at index ${index}: "${result.value}"`, 'info');
+          this.highlightNode(index);
+        } else {
+          this.log(`Index ${index} out of bounds`, 'error');
+        }
+      }
+      insertAt() {
+        const indexInput = document.getElementById('insertIndex');
+        const valueInput = document.getElementById('insertValue');
+        const index = parseInt(indexInput.value);
+        const value = valueInput.value.trim();
+        if (isNaN(index) || !value) {
+          this.log('Error: Invalid index or empty value', 'error');
+          return;
+        }
+        const result = this.list.insertAt(index, value);
+        if (result.success) {
+          this.operations++;
+          indexInput.value = '';
+          valueInput.value = '';
+          this.render();
+          this.log(`Inserted "${value}" at index ${index}`, 'success');
+          this.highlightNode(index);
+        } else {
+          this.log(`Insert failed: ${result.message}`, 'error');
+        }
+      }
+      removeAt() {
+        const input = document.getElementById('removeIndex');
+        const index = parseInt(input.value);
+        if (isNaN(index)) {
+          this.log('Error: Invalid index', 'error');
+          return;
+        }
+        const result = this.list.removeAt(index);
+        if (result.success) {
+          this.operations++;
+          input.value = '';
+          this.render();
+          this.log(`Removed element at index ${index}`, 'success');
+        } else {
+          this.log(`Remove failed: ${result.message}`, 'error');
+        }
+      }
+      clear() {
+        this.list.clear();
+        this.operations = 0;
+        this.render();
+        this.log('List cleared. All nodes removed.', 'warning');
+      }
+      highlightNode(index) {
+        setTimeout(() => {
+          const nodes = document.querySelectorAll('.node');
+          if (nodes[index]) {
+            nodes[index].classList.add('highlight');
+            setTimeout(() => {
+              nodes[index].classList.remove('highlight');
+            }, 1000);
+          }
+        }, 100);
+      }
+      render() {
+        const container = document.getElementById('listContainer');
+        const nodes = this.list.toArray();
+        document.getElementById('listLength').textContent = this.list.length;
+        document.getElementById('headValue').textContent = this.list.head ? this.list.head.element : 'null';
+        document.getElementById('nodeCount').textContent = nodes.length;
+        document.getElementById('opCount').textContent = this.operations;
+        if (nodes.length === 0) {
+          container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">∅</div>
+                            <p>List is empty. Add nodes to begin visualization.</p>
+                        </div>
+                    `;
+          return;
+        }
+        let html = '';
+        nodes.forEach((node, i) => {
+          html += `
+                        <div class="node" data-id="${node.id}" data-index="${node.index}">
+                            <span class="node-index">${node.index}</span>
+                            <span class="node-value">${this.escapeHtml(node.element)}</span>
+                            ${i < nodes.length - 1 ? '<span class="node-pointer">→</span>' : ''}
+                            <div class="code-preview">
+                                node: {<br>
+                                &nbsp;&nbsp;element: "${node.element}",<br>
+                                &nbsp;&nbsp;next: ${i < nodes.length - 1 ? 'node#' + (node.index + 1) : 'null'}<br>
+                                }
+                            </div>
+                        </div>
+                    `;
+          if (i < nodes.length - 1) {
+            html += '<div class="arrow"></div>';
+          }
+        });
+        html += '<div class="null-terminator">NULL</div>';
+        container.innerHTML = html;
+      }
+      escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+      log(message, type = 'info') {
+        const console = document.getElementById('console');
+        const time = new Date().toLocaleTimeString('en-US', {
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+        const line = document.createElement('div');
+        line.className = 'console-line';
+        line.innerHTML = `
+                    <span class="console-time">[${time}]</span>
+                    <span class="console-${type}">${message}</span>
+                `;
+        console.appendChild(line);
+        console.scrollTop = console.scrollHeight;
+        while (console.children.length > 50) {
+          console.removeChild(console.firstChild);
+        }
+      }
+    }
+    const listApp = new ListApp();
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const active = document.activeElement;
+        if (active.id === 'addValue') listApp.add();
+        else if (active.id === 'removeValue') listApp.remove();
+        else if (active.id === 'searchValue') listApp.contains();
+        else if (active.id === 'getIndex') listApp.getAt();
+        else if (active.id === 'insertValue') listApp.insertAt();
+        else if (active.id === 'removeIndex') listApp.removeAt();
+      }
+    });
+  </script>
+</body>
+
+</html>
