@@ -113,4 +113,40 @@ public class LinkedList<T> {
     }
     
     public void removeAt(int index) {
-        if (index < 0 || index >=
+        if (index < 0 || index >= length || head == null) {
+            return;
+        }
+        
+        if (index == 0) {
+            head = head.next;
+        } else {
+            Node<T> current = head;
+            int currentIndex = 0;
+            
+            while (current != null && currentIndex < index - 1) {
+                current = current.next;
+                currentIndex++;
+            }
+            
+            if (current != null && current.next != null) {
+                current.next = current.next.next;
+            }
+        }
+        
+        length--;
+    }
+    
+    public void clear() {
+        head = null;
+        length = 0;
+    }
+    
+    // Getters for testing
+    public Node<T> getHead() {
+        return head;
+    }
+    
+    public int getLength() {
+        return length;
+    }
+}
